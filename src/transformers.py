@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -42,3 +43,43 @@ class PositiveMedianImputer(TransformerMixin, BaseEstimator):
         feature_name = "MasVnrArea" if input_features is None else input_features[0]
 
         return np.array([feature_name, f"{feature_name}_missing"], dtype=object)
+
+
+class MasonryTypeImputer(TransformerMixin, BaseEstimator):
+    """Impute masonry type based on the original masonry area."""
+
+    def fit(self, X, y=None):
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("Expected a pandas DataFrame.")
+
+        required = ["MasVnrType", "MasVnrArea"]
+
+        if not all(col in X.columns for col in required):
+            raise ValueError("Required masonry columns are missing.")
+
+        self.n_features_in_ = 2
+        self.feature_names_in_ = np.array(required, dtype=object)
+
+        return self
+
+    def transform(self, X):
+        check_is_fitted(self, "feature_names_in_")
+
+        data = X[self.feature_names_in_].copy()
+        # Ensure the categorical column can store string values
+        data["MasVnrType"] = data["MasVnrType"].astype(object)
+
+        missing_type = data["MasVnrType"].isna()
+
+        no_veneer = missing_type & (data["MasVnrArea"] == 0)
+
+        data.loc[no_veneer, "MasVnrType"] = "None"
+
+        data.loc[missing_type & ~no_veneer, "MasVnrType"] = "Unknown"
+
+        return data[["MasVnrType"]].to_numpy()
+
+    def get_feature_names_out(self, input_features=None):
+        check_is_fitted(self, "feature_names_in_")
+
+        return np.asarray(["MasVnrType"], dtype=object)
