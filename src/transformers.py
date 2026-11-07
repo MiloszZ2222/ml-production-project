@@ -153,3 +153,44 @@ class AreaFeaturesTransformer(TransformerMixin, BaseEstimator):
         check_is_fitted(self, "feature_names_in_")
 
         return np.asarray(["TotalSF"], dtype=object)
+
+
+class BathroomFeaturesTransformer(TransformerMixin, BaseEstimator):
+    """Create a weighted total bathroom count feature."""
+
+    def fit(self, X, y=None):
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("Expected a pandas DataFrame.")
+
+        required = [
+            "FullBath",
+            "HalfBath",
+            "BsmtFullBath",
+            "BsmtHalfBath",
+        ]
+
+        if not all(col in X.columns for col in required):
+            raise ValueError("Required bathroom columns are missing.")
+
+        self.feature_names_in_ = np.asarray(required, dtype=object)
+        self.n_features_in_ = len(required)
+
+        return self
+
+    def transform(self, X):
+        check_is_fitted(self, "feature_names_in_")
+
+        data = X[self.feature_names_in_].copy()
+
+        total_bathrooms = (
+            data["FullBath"]
+            + data["BsmtFullBath"]
+            + 0.5 * (data["HalfBath"] + data["BsmtHalfBath"])
+        )
+
+        return total_bathrooms.to_numpy().reshape(-1, 1)
+
+    def get_feature_names_out(self, input_features=None):
+        check_is_fitted(self, "feature_names_in_")
+
+        return np.asarray(["TotalBathrooms"], dtype=object)

@@ -5,6 +5,7 @@ import pytest
 from src.transformers import (
     AgeFeaturesTransformer,
     AreaFeaturesTransformer,
+    BathroomFeaturesTransformer,
     MasonryTypeImputer,
     PositiveMedianImputer,
 )
@@ -234,6 +235,80 @@ def test_area_features_transformer_does_not_modify_input():
     X_original = X.copy(deep=True)
 
     transformer = AreaFeaturesTransformer()
+    transformer.fit_transform(X)
+
+    pd.testing.assert_frame_equal(X, X_original)
+
+
+def test_bathroom_features_transformer():
+    X = pd.DataFrame(
+        {
+            "FullBath": [2, 1, 2, 0],
+            "HalfBath": [1, 0, 1, 1],
+            "BsmtFullBath": [0, 1, 1, 0],
+            "BsmtHalfBath": [0, 0, 1, 1],
+        }
+    )
+
+    transformer = BathroomFeaturesTransformer()
+    result = transformer.fit_transform(X)
+
+    expected = np.array(
+        [
+            [2.5],
+            [2.0],
+            [4.0],
+            [1.0],
+        ]
+    )
+
+    np.testing.assert_array_equal(result, expected)
+
+    assert result.shape == (4, 1)
+    assert transformer.get_feature_names_out().tolist() == ["TotalBathrooms"]
+
+
+@pytest.mark.parametrize(
+    "X, error_type, error_message",
+    [
+        (
+            np.array([[2, 1, 0, 0]]),
+            TypeError,
+            "Expected a pandas DataFrame",
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "FullBath": [2],
+                    "HalfBath": [1],
+                    "BsmtFullBath": [0],
+                }
+            ),
+            ValueError,
+            "Required bathroom columns are missing",
+        ),
+    ],
+)
+def test_bathroom_features_transformer_invalid_input(X, error_type, error_message):
+    transformer = BathroomFeaturesTransformer()
+
+    with pytest.raises(error_type, match=error_message):
+        transformer.fit(X)
+
+
+def test_bathroom_features_transformer_does_not_modify_input():
+    X = pd.DataFrame(
+        {
+            "FullBath": [2, 1],
+            "HalfBath": [1, 0],
+            "BsmtFullBath": [0, 1],
+            "BsmtHalfBath": [0, 0],
+        }
+    )
+
+    X_original = X.copy(deep=True)
+
+    transformer = BathroomFeaturesTransformer()
     transformer.fit_transform(X)
 
     pd.testing.assert_frame_equal(X, X_original)
