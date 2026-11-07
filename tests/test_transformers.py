@@ -2,7 +2,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.transformers import MasonryTypeImputer, PositiveMedianImputer
+from src.transformers import (
+    AgeFeaturesTransformer,
+    MasonryTypeImputer,
+    PositiveMedianImputer,
+)
 
 
 def test_positive_median_imputer():
@@ -105,4 +109,72 @@ def test_masonry_type_imputer_missing_columns():
     transformer = MasonryTypeImputer()
 
     with pytest.raises(ValueError, match="Required masonry columns are missing"):
+        transformer.fit(X)
+
+
+def test_age_features_transformer():
+    X = pd.DataFrame(
+        {
+            "YrSold": [2010, 2008, 2007],
+            "YearBuilt": [2000, 2008, 2007],
+            "YearRemodAdd": [2005, 2008, 2008],
+        }
+    )
+
+    transformer = AgeFeaturesTransformer()
+    result = transformer.fit_transform(X)
+
+    assert result.shape == (3, 5)
+
+    assert result["HouseAge"].tolist() == [10, 0, 0]
+    assert result["YearsSinceRemodel"].tolist() == [5, 0, 0]
+
+
+def test_age_features_transformer_preserves_input_and_names():
+    X = pd.DataFrame(
+        {
+            "YrSold": [2010, 2008],
+            "YearBuilt": [2000, 2005],
+            "YearRemodAdd": [2005, 2007],
+        }
+    )
+
+    X_original = X.copy(deep=True)
+
+    transformer = AgeFeaturesTransformer()
+    result = transformer.fit_transform(X)
+
+    # Verify that input data remains unchanged
+    pd.testing.assert_frame_equal(X, X_original)
+
+    pd.testing.assert_frame_equal(result[X.columns], X_original)
+
+    # Verify that output feature names match the actual columns
+    assert list(transformer.get_feature_names_out()) == result.columns.tolist()
+
+
+@pytest.mark.parametrize(
+    "X, error_type, error_message",
+    [
+        (
+            np.array([[2010, 2000, 2005]]),
+            TypeError,
+            "Expected a pandas DataFrame",
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "YrSold": [2010],
+                    "YearBuilt": [2000],
+                }
+            ),
+            ValueError,
+            "Required age columns are missing",
+        ),
+    ],
+)
+def test_age_features_transformer_invalid_input(X, error_type, error_message):
+    transformer = AgeFeaturesTransformer()
+
+    with pytest.raises(error_type, match=error_message):
         transformer.fit(X)

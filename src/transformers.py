@@ -83,3 +83,41 @@ class MasonryTypeImputer(TransformerMixin, BaseEstimator):
         check_is_fitted(self, "feature_names_in_")
 
         return np.asarray(["MasVnrType"], dtype=object)
+
+
+class AgeFeaturesTransformer(TransformerMixin, BaseEstimator):
+    """Create property age and years-since-remodeling features."""
+
+    def fit(self, X, y=None):
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("Expected a pandas DataFrame.")
+
+        required = ["YrSold", "YearBuilt", "YearRemodAdd"]
+
+        if not all(col in X.columns for col in required):
+            raise ValueError("Required age columns are missing.")
+
+        self.feature_names_in_ = np.asarray(X.columns, dtype=object)
+        self.n_features_in_ = X.shape[1]
+        return self
+
+    def transform(self, X):
+        check_is_fitted(self, "feature_names_in_")
+
+        X = X.copy()
+
+        X["HouseAge"] = X["YrSold"] - X["YearBuilt"]
+
+        X["YearsSinceRemodel"] = (X["YrSold"] - X["YearRemodAdd"]).clip(lower=0)
+
+        return X
+
+    def get_feature_names_out(self, input_features=None):
+        check_is_fitted(self, "feature_names_in_")
+
+        if input_features is None:
+            input_features = self.feature_names_in_
+
+        return np.asarray(
+            [*input_features, "HouseAge", "YearsSinceRemodel"], dtype=object
+        )
