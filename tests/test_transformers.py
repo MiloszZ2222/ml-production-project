@@ -4,6 +4,7 @@ import pytest
 
 from src.transformers import (
     AgeFeaturesTransformer,
+    AreaFeaturesTransformer,
     MasonryTypeImputer,
     PositiveMedianImputer,
 )
@@ -178,3 +179,61 @@ def test_age_features_transformer_invalid_input(X, error_type, error_message):
 
     with pytest.raises(error_type, match=error_message):
         transformer.fit(X)
+
+
+def test_area_features_transformer():
+    X = pd.DataFrame({"GrLivArea": [1500, 1200, 1800], "TotalBsmtSF": [800, 0, 1000]})
+
+    transformer = AreaFeaturesTransformer()
+    result = transformer.fit_transform(X)
+
+    expected = np.array(
+        [
+            [2300],
+            [1200],
+            [2800],
+        ]
+    )
+
+    np.testing.assert_array_equal(result, expected)
+
+    assert result.shape == (3, 1)
+    assert transformer.get_feature_names_out().tolist() == ["TotalSF"]
+
+
+@pytest.mark.parametrize(
+    "X, error_type, error_message",
+    [
+        (
+            np.array([[1500, 800]]),
+            TypeError,
+            "Expected a pandas DataFrame",
+        ),
+        (
+            pd.DataFrame({"GrLivArea": [1500]}),
+            ValueError,
+            "Required area columns are missing",
+        ),
+    ],
+)
+def test_area_features_transformer_invalid_input(X, error_type, error_message):
+    transformer = AreaFeaturesTransformer()
+
+    with pytest.raises(error_type, match=error_message):
+        transformer.fit(X)
+
+
+def test_area_features_transformer_does_not_modify_input():
+    X = pd.DataFrame(
+        {
+            "GrLivArea": [1500, 1200],
+            "TotalBsmtSF": [800, 0],
+        }
+    )
+
+    X_original = X.copy(deep=True)
+
+    transformer = AreaFeaturesTransformer()
+    transformer.fit_transform(X)
+
+    pd.testing.assert_frame_equal(X, X_original)

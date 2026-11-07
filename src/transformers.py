@@ -121,3 +121,35 @@ class AgeFeaturesTransformer(TransformerMixin, BaseEstimator):
         return np.asarray(
             [*input_features, "HouseAge", "YearsSinceRemodel"], dtype=object
         )
+
+
+class AreaFeaturesTransformer(TransformerMixin, BaseEstimator):
+    """Create total above-ground and basement area feature."""
+
+    def fit(self, X, y=None):
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("Expected a pandas DataFrame.")
+
+        required = ["GrLivArea", "TotalBsmtSF"]
+
+        if not all(col in X.columns for col in required):
+            raise ValueError("Required area columns are missing.")
+
+        self.feature_names_in_ = np.asarray(required, dtype=object)
+        self.n_feature_names_in_ = len(required)
+
+        return self
+
+    def transform(self, X):
+        check_is_fitted(self, "feature_names_in_")
+
+        data = X[self.feature_names_in_].copy()
+
+        total_sf = data["GrLivArea"] + data["TotalBsmtSF"]
+
+        return total_sf.to_numpy().reshape(-1, 1)
+
+    def get_feature_names_out(self, input_features=None):
+        check_is_fitted(self, "feature_names_in_")
+
+        return np.asarray(["TotalSF"], dtype=object)
