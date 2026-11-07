@@ -1,0 +1,29 @@
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml-production-project"
+version = "0.1.0"
+description = "End-to-end machine learning engineering project for house price prediction"
+requires-python = ">=3.11,<3.14"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "xgboost",
+    "joblib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "jupyter",
+    "ipykernel",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
