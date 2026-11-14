@@ -23,7 +23,8 @@ dev = [
     "ruff",
     "jupyter",
     "ipykernel",
-    "matplotlib"
+    "matplotlib",
+    "optuna",
 ]
 
 [tool.setuptools.packages.find]
