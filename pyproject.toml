@@ -23,6 +23,7 @@ dev = [
     "ruff",
     "jupyter",
     "ipykernel",
+    "matplotlib"
 ]
 
 [tool.setuptools.packages.find]
