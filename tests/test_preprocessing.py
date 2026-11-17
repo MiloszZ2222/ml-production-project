@@ -1,58 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from src.preprocessing import (
-    NOMINAL_ABSENCE_COLUMNS,
-    NOMINAL_REGULAR_COLUMNS,
-    NUMERIC_PASSTHROUGH_COLUMNS,
-    ORDINAL_CATEGORIES,
-    build_preprocessor,
-)
+from src.preprocessing import build_preprocessor
 
 
-def make_sample_house_data():
-    # Start with all remaining numeric features
-    data = {column: [1.0, 2.0, 3.0] for column in NUMERIC_PASSTHROUGH_COLUMNS}
-
-    # Provide valid ordinal categories
-    for column, categories in ORDINAL_CATEGORIES.items():
-        data[column] = [categories[-1]] * 3
-
-    # Provide sample nominal categories
-    for column in NOMINAL_REGULAR_COLUMNS:
-        data[column] = ["Sample"] * 3
-
-    for column in NOMINAL_ABSENCE_COLUMNS:
-        data[column] = [np.nan, "Present", np.nan]
-
-    # Custom transformer inputs
-    data.update(
-        {
-            "MasVnrArea": [0.0, 100.0, np.nan],
-            "MasVnrType": [np.nan, "Stone", np.nan],
-            "YrSold": [2010, 2008, 2007],
-            "YearBuilt": [2000, 2005, 2007],
-            "YearRemodAdd": [2005, 2007, 2008],
-            "GrLivArea": [1500, 1200, 1800],
-            "TotalBsmtSF": [800, 0, 1000],
-            "FullBath": [2, 1, 2],
-            "HalfBath": [1, 0, 1],
-            "BsmtFullBath": [0, 1, 1],
-            "BsmtHalfBath": [0, 0, 1],
-            "LotFrontage": [50.0, np.nan, 90.0],
-            "LotArea": [8000, 9000, 10000],
-            "1stFlrSF": [1000, 1100, 1200],
-            "GarageYrBlt": [2000.0, np.nan, 1995.0],
-            "MSSubClass": [20, 60, 30],
-            "Electrical": ["SBrkr", np.nan, "SBrkr"],
-        }
-    )
-
-    return pd.DataFrame(data)
-
-
-def test_complete_preprocessor():
-    X = make_sample_house_data()
+def test_complete_preprocessor(house_data_factory):
+    X = house_data_factory()
     X_original = X.copy(deep=True)
 
     preprocessor = build_preprocessor()
@@ -106,8 +59,8 @@ def test_complete_preprocessor():
     )
 
 
-def test_preprocessor_handles_new_data():
-    X_train = make_sample_house_data()
+def test_preprocessor_handles_new_data(house_data_factory):
+    X_train = house_data_factory()
 
     preprocessor = build_preprocessor()
     train_result = preprocessor.fit_transform(X_train)
@@ -142,21 +95,15 @@ def test_preprocessor_handles_new_data():
     )
 
 
-def test_preprocessor_on_real_data():
-    from pathlib import Path
-
-    data_path = Path(__file__).resolve().parents[1] / "data" / "raw" / "train.csv"
-
-    df = pd.read_csv(data_path)
-
-    X = df.drop(columns=["Id", "SalePrice"])
+def test_preprocessor_on_larger_synthetic_data(house_data_factory):
+    X = house_data_factory(n_samples=150)
 
     preprocessor = build_preprocessor()
     result = preprocessor.fit_transform(X)
 
     feature_names = preprocessor.get_feature_names_out()
 
-    assert result.shape[0] == len(X)
+    assert result.shape[0] == 150
     assert result.shape[1] == len(feature_names)
 
     assert len(feature_names) == len(set(feature_names))
