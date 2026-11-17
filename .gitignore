@@ -236,3 +236,6 @@ mlartifacts/
 
 # Pytest temporary files
 .pytest_tmp/
+
+# Local datasets
+/data/
