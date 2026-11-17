@@ -233,3 +233,6 @@ models/*.joblib
 # MLflow local artifacts
 mlruns/
 mlartifacts/
+
+# Pytest temporary files
+.pytest_tmp/

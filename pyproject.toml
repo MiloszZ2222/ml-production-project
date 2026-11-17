@@ -15,6 +15,8 @@ dependencies = [
     "scikit-learn",
     "xgboost",
     "joblib",
+    "boto3[crt]>=1.41.0",
+    "mlflow",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +25,10 @@ dev = [
     "ruff",
     "jupyter",
     "ipykernel",
+    "matplotlib",
+    "optuna",
+    "seaborn",
+    "scipy"
 ]
 
 [tool.setuptools.packages.find]
