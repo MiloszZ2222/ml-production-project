@@ -1,50 +1,49 @@
 import argparse
-import os
 
 import mlflow
 from mlflow import MlflowClient
 
-TRACKING_URI = os.getenv(
-    "MLFLOW_TRACKING_URI",
-    "http://127.0.0.1:5000",
-)
-
-MODEL_NAME = "house-price-predictor"
+from src.config import settings
 
 
-def main():
+def main() -> None:
+    """Register an MLflow model and optionally assign the champion alias."""
+
     parser = argparse.ArgumentParser(description="Register an MLflow model.")
+
     parser.add_argument(
         "--model-uri",
         required=True,
         help="URI of the logged model to register.",
     )
+
     parser.add_argument(
         "--set-champion",
         action="store_true",
-        help="Assign the champion alias to the new version.",
+        help="Assign the configured model alias to the new version.",
     )
 
     args = parser.parse_args()
 
-    mlflow.set_tracking_uri(TRACKING_URI)
+    mlflow.set_tracking_uri(settings.mlflow.tracking_uri)
     client = MlflowClient()
 
     model_version = mlflow.register_model(
         model_uri=args.model_uri,
-        name=MODEL_NAME,
+        name=settings.mlflow.model_name,
     )
 
-    print(f"Registered model: {MODEL_NAME}")
+    print(f"Registered model: {settings.mlflow.model_name}")
     print(f"Version: {model_version.version}")
 
     if args.set_champion:
         client.set_registered_model_alias(
-            name=MODEL_NAME,
-            alias="champion",
+            name=settings.mlflow.model_name,
+            alias=settings.mlflow.model_alias,
             version=model_version.version,
         )
-        print("Alias assigned: champion")
+
+        print(f"Alias assigned: {settings.mlflow.model_alias}")
 
 
 if __name__ == "__main__":
