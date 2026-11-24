@@ -20,6 +20,8 @@ dependencies = [
     "pyyaml",
     "pydantic-settings",
     "cloudpickle",
+    "fastapi",
+    "uvicorn[standard]",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +34,7 @@ dev = [
     "optuna",
     "seaborn",
     "scipy",
+    "httpx2"
 ]
 
 [tool.setuptools.packages.find]
