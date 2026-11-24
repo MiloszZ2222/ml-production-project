@@ -37,3 +37,8 @@ training:
 api:
   host: 0.0.0.0
   port: 8000
+
+deployment:
+  model_url: https://ml-production-demo-858525799461-eu-north-1-an.s3.eu-north-1.amazonaws.com/models/house-price-predictor/v1/model.zip
+  model_sha256: 61c564cd291f8b13c875639ca3b0e96a48331bc7991c4b15284cd9b48ce15611
+  download_timeout: 30

@@ -49,12 +49,19 @@ class APIConfig(BaseModel):
     port: int = Field(ge=1, le=65535)
 
 
+class DeploymentConfig(BaseModel):
+    model_url: str = Field(pattern=r"^https://")
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    download_timeout: int = Field(gt=0)
+
+
 class Settings(BaseSettings):
     aws: AWSConfig
     data: DataConfig
     mlflow: MLflowConfig
     training: TrainingConfig
     api: APIConfig
+    deployment: DeploymentConfig
 
     model_config = SettingsConfigDict(
         yaml_file=CONFIG_PATH,
